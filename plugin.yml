@@ -1,0 +1,8 @@
+name: PCM_DisguisePlayer
+version: 1.0.0
+main: PCM_DisguisePlayer\Main
+author: PeratX
+api: 1.13.0
+description: Change a player into an entity or a block
+custom_made_to: ZXDA CM PLATFORM
+website: https://mcper.cn
