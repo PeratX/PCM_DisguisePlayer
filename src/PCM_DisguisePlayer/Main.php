@@ -20,7 +20,7 @@
  * 致使用者：本插件是自由软件(遵循GPLv3协议开源)，重新发布请务必注明原作者，谢谢。
  * To PRIMARY STUDENTS: DO NOT LOOK AT THIS, THIS MAY HARM TO YOU!
  * This plugin will work quicker and better with Genisys - Ikaros (创世纪 - 易卡螺丝)
- * 
+ *
  */
 
 namespace PCM_DisguisePlayer;
@@ -97,6 +97,9 @@ class Main extends PluginBase{
 		$this->cfgdata = $this->cfg->getAll();
 		$this->tempVector = new Vector3(0, 0, 0); //In order to save memory
 		$this->eventListener = new EventListener($this);
+		foreach($this->getServer()->getLevels() as $level){
+			$this->blocks[$level->getFolderName()] = [];
+		}
 		$this->getServer()->getPluginManager()->registerEvents($this->eventListener, $this);
 		$this->getLogger()->notice($this->getDescription()->getName() . " has been enabled.");
 	}
@@ -114,7 +117,7 @@ class Main extends PluginBase{
 	}
 
 	public function onDisable(){
-		foreach($this->players as $p){
+		foreach($this->players as $p => $d){
 			$this->clearPlayerDisguiseStatus($this->getServer()->getPlayerExact($p));
 		}
 		$this->players = [];
@@ -137,10 +140,11 @@ class Main extends PluginBase{
 		return null;
 	}
 
-	public function setLastPosition($name, Position $pos){
+	public function setLastPosition(Player $player, Position $pos){
+		$name = $player->getName();
 		$this->players[strtolower($name)][self::DISGUISE_LAST_X] = $pos->x;
 		$this->players[strtolower($name)][self::DISGUISE_LAST_Y] = $pos->y;
-		$this->players[strtolower($name)][self::DISGUISE_LAST_Z] = $pos->x;
+		$this->players[strtolower($name)][self::DISGUISE_LAST_Z] = $pos->z;
 		$this->players[strtolower($name)][self::DISGUISE_LAST_LEVEL] = $pos->level;
 	}
 
@@ -157,21 +161,24 @@ class Main extends PluginBase{
 
 	public function updateBlock(Player $player){
 		if($this->getPlayerDisguiseType($name = $player->getName()) == self::DISGUISE_TYPE_BLOCK){
-			$lastBlock = $this->getLastLevel($player->getName())->getBlock($this->tempVector->setComponents($this->players[strtolower($name)][self::DISGUISE_LAST_X], $this->players[strtolower($name)][self::DISGUISE_LAST_Y], $this->players[strtolower($name)][self::DISGUISE_LAST_Z]));
+			$lastBlock = $this->getLastLevel($name)->getBlock($this->tempVector->setComponents($this->players[strtolower($name)][self::DISGUISE_LAST_X], $this->players[strtolower($name)][self::DISGUISE_LAST_Y], $this->players[strtolower($name)][self::DISGUISE_LAST_Z]));
 			if($lastBlock->getId() == $this->players[strtolower($name)][self::DISGUISE_BLOCK_ID] and $lastBlock->getDamage() == $this->players[strtolower($name)][self::DISGUISE_BLOCK_META]){
-				$this->getLastLevel($player->getName())->setBlock($lastBlock, new Air(), true, false);
+				$this->getLastLevel($name)->setBlock($lastBlock, new Air(), true, false);
 			}
-			$pos = $player->round();
+			if(isset($this->blocks[$player->getLevel()->getFolderName()][$hash = Level::blockHash($lastBlock->x, $lastBlock->y, $lastBlock->z)])){
+				unset($this->blocks[$player->getLevel()->getFolderName()][$hash]);
+			}
+			$pos = $player->add(-0.5, 0, -0.5)->round();
 			if($player->getLevel()->getBlock($pos)->getId() === Block::AIR){
 				$player->getLevel()->setBlock($pos, Block::get($this->players[strtolower($name)][self::DISGUISE_BLOCK_ID], $this->players[strtolower($name)][self::DISGUISE_BLOCK_META]), true, false);
 				$this->blocks[$player->getLevel()->getFolderName()][Level::blockHash($pos->x, $pos->y, $pos->z)] = $player;
 			}
-			$this->setLastPosition($player, $player);
+			$this->setLastPosition($player, Position::fromObject($pos, $player->getLevel()));
 		}
 	}
 
 	public function disguisePlayerToBlock(Player $player, $id, $meta){
-		if($this->getPlayerDisguiseType($player) == self::DISGUISE_TYPE_NONE){
+		if($this->getPlayerDisguiseType($player) == self::DISGUISE_TYPE_NONE and in_array($id, $this->getAvailableBlocks())){
 			$this->setPlayerDisguiseType($player, self::DISGUISE_TYPE_BLOCK);
 			$name = $player->getName();
 			$this->players[strtolower($name)][self::DISGUISE_BLOCK_ID] = $id;

@@ -28,6 +28,7 @@ use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\event\player\PlayerQuitEvent;
+use pocketmine\event\player\PlayerToggleSneakEvent;
 use pocketmine\item\Item;
 use pocketmine\level\Level;
 
@@ -57,7 +58,13 @@ class EventListener implements Listener{
 	}
 
 	public function onPlayerQuit(PlayerQuitEvent $ev){
+		$this->plugin->clearPlayerDisguiseStatus($ev->getPlayer());
+	}
 
+	public function onPlayerSneak(PlayerToggleSneakEvent $ev){
+		if($ev->isSneaking()){
+			$this->plugin->clearPlayerDisguiseStatus($ev->getPlayer());
+		}
 	}
 	
 	public function onLevelLoad(LevelLoadEvent $ev){
@@ -68,6 +75,9 @@ class EventListener implements Listener{
 		if($ev->getAction() == PlayerInteractEvent::RIGHT_CLICK_BLOCK){
 			if(in_array($hash = Level::blockHash($ev->getBlock()->x, $ev->getBlock()->y, $ev->getBlock()->z), $blocks = $this->plugin->getBlocks($ev->getBlock()->getLevel()))){
 				$player = $blocks[$hash];
+				if($player == $ev->getPlayer()){
+					return;
+				}
 				$item = $ev->getItem();
 				$damageTable = [
 					Item::WOODEN_SWORD => 4,
@@ -133,9 +143,12 @@ class EventListener implements Listener{
 				$event = new EntityDamageByEntityEvent($ev->getPlayer(), $player, EntityDamageEvent::CAUSE_ENTITY_ATTACK, $damage);
 
 				$player->attack($event->getFinalDamage(), $event);
-			}elseif($this->plugin->getPlayerDisguiseType($ev->getPlayer()) == Main::DISGUISE_TYPE_NONE and in_array($ev->getItem()->getId(), $this->plugin->getHeldItems())){
+				return;
+			}
+			if($this->plugin->getPlayerDisguiseType($ev->getPlayer()) == Main::DISGUISE_TYPE_NONE and in_array($ev->getItem()->getId(), $this->plugin->getHeldItems())){
 				$block = $ev->getBlock();
 				$this->plugin->disguisePlayerToBlock($ev->getPlayer(), $block->getId(), $block->getDamage());
+				return;
 			}
 		}
 	}
