@@ -75,10 +75,6 @@ class GenericEntity extends Creature{
 		}
 	}
 
-	public function onUpdate($tick){
-		return false;
-	}
-
 	public function saveNBT(){
 		$this->namedtag = null;
 	}
