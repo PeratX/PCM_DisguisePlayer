@@ -28,12 +28,17 @@ namespace PCM_DisguisePlayer;
 use pocketmine\block\Air;
 use pocketmine\block\Block;
 use pocketmine\entity\Cow;
+use pocketmine\entity\Entity;
 use pocketmine\entity\Pig;
 use pocketmine\entity\Sheep;
 use pocketmine\item\Item;
 use pocketmine\level\Level;
 use pocketmine\level\Position;
 use pocketmine\math\Vector3;
+use pocketmine\nbt\tag\CompoundTag;
+use pocketmine\nbt\tag\DoubleTag;
+use pocketmine\nbt\tag\FloatTag;
+use pocketmine\nbt\tag\ListTag;
 use pocketmine\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\Config;
@@ -48,14 +53,17 @@ class Main extends PluginBase{
 	const DISGUISE_BLOCK_ID = 1;
 	const DISGUISE_BLOCK_META = 2;
 	const DISGUISE_ENTITY_NETWORK_ID = 3;
-	const DISGUISE_LAST_X = 4;
-	const DISGUISE_LAST_Y = 5;
-	const DISGUISE_LAST_Z = 6;
-	const DISGUISE_LAST_LEVEL = 7;
+	const DISGUISE_ENTITY_ID = 4;
+	const DISGUISE_LAST_X = 5;
+	const DISGUISE_LAST_Y = 6;
+	const DISGUISE_LAST_Z = 7;
+	const DISGUISE_LAST_LEVEL = 8;
 
 	const DISGUISE_TYPE_NONE = -1;
 	const DISGUISE_TYPE_BLOCK = 0;
 	const DISGUISE_TYPE_ENTITY = 1;
+
+	private static $obj = null;
 
 	/** @var  Config */
 	private $cfg;
@@ -65,7 +73,7 @@ class Main extends PluginBase{
 	/** @var Player[][] */
 	public $blocks = [];
 	/** @var Player[][] */
-	private $entities = [];
+	public $entities = [];
 	/** @var  EventListener */
 	private $eventListener;
 
@@ -78,6 +86,7 @@ class Main extends PluginBase{
 			$this->setEnabled(false);
 			return;
 		}
+		self::$obj = $this;
 		@mkdir($this->getDataFolder());
 		$this->cfg = new Config($this->getDataFolder() . "config.yml", Config::YAML, [
 			"heldItems" => [
@@ -100,8 +109,16 @@ class Main extends PluginBase{
 		foreach($this->getServer()->getLevels() as $level){
 			$this->blocks[$level->getFolderName()] = [];
 		}
+		Entity::registerEntity(GenericEntity::class);
 		$this->getServer()->getPluginManager()->registerEvents($this->eventListener, $this);
 		$this->getLogger()->notice($this->getDescription()->getName() . " has been enabled.");
+	}
+
+	/**
+	 * @return Main
+	 */
+	public static function getInstance(){
+		return self::$obj;
 	}
 
 	public function getAvailableBlocks(){
@@ -177,6 +194,55 @@ class Main extends PluginBase{
 		}
 	}
 
+	public function updateEntity(Player $player){
+		if($this->getPlayerDisguiseType($player->getName()) == self::DISGUISE_TYPE_ENTITY
+			and isset($this->players[$name = strtolower($player->getName())][self::DISGUISE_ENTITY_ID])
+		){
+			/** @var GenericEntity $ent */
+			$ent = $player->getLevel()->getEntity($this->players[$name = strtolower($player->getName())][self::DISGUISE_ENTITY_ID]);
+			$ent->checkPosition();
+		}
+	}
+
+	public function createEntity(Player $player){
+		if($this->getPlayerDisguiseType($player->getName()) == self::DISGUISE_TYPE_ENTITY
+			and isset($this->players[$name = strtolower($player->getName())][self::DISGUISE_ENTITY_NETWORK_ID])
+			and !isset($this->players[$name][self::DISGUISE_ENTITY_ID])
+		){
+			$ent = new GenericEntity($player->chunk, $nbt = new CompoundTag("", [
+				"Pos" => new ListTag("Pos", [
+					new DoubleTag("", $player->x),
+					new DoubleTag("", $player->y),
+					new DoubleTag("", $player->z)
+				]),
+				"Motion" => new ListTag("Motion", [
+					new DoubleTag("", 0),
+					new DoubleTag("", 0),
+					new DoubleTag("", 0)
+				]),
+				"Rotation" => new ListTag("Rotation", [
+					new FloatTag("", $player->yaw),
+					new FloatTag("", $player->pitch)
+				])
+			]), $player, $this->players[$name][self::DISGUISE_ENTITY_NETWORK_ID]);
+			$ent->spawnToAll();
+			$this->players[$name][self::DISGUISE_ENTITY_ID] = $ent->getId();
+			$this->entities[$ent->getId()] = $player;
+		}
+	}
+
+	public function disguisePlayerToEntity(Player $player, $network_id){
+		if($this->getPlayerDisguiseType($player->getName()) == self::DISGUISE_TYPE_NONE and in_array($network_id, $this->getAvailableEntities())){
+			$this->setPlayerDisguiseType($player, self::DISGUISE_TYPE_ENTITY);
+			$name = $player->getName();
+			$this->players[strtolower($name)][self::DISGUISE_ENTITY_NETWORK_ID] = $network_id;
+			$this->setLastPosition($player, $player);
+			$this->hidePlayer($player);
+			$this->createEntity($player);
+			$this->updateEntity($player);
+		}
+	}
+
 	public function disguisePlayerToBlock(Player $player, $id, $meta){
 		if($this->getPlayerDisguiseType($player) == self::DISGUISE_TYPE_NONE and in_array($id, $this->getAvailableBlocks())){
 			$this->setPlayerDisguiseType($player, self::DISGUISE_TYPE_BLOCK);
@@ -184,9 +250,8 @@ class Main extends PluginBase{
 			$this->players[strtolower($name)][self::DISGUISE_BLOCK_ID] = $id;
 			$this->players[strtolower($name)][self::DISGUISE_BLOCK_META] = $meta;
 			$this->setLastPosition($player, $player);
-			$this->updateBlock($player);
-
 			$this->hidePlayer($player);
+			$this->updateBlock($player);
 		}
 	}
 
@@ -199,6 +264,12 @@ class Main extends PluginBase{
 					true,
 					false
 				);
+			}
+			if(isset($this->blocks[$this->getLastLevel($player->getName())][$hash = Level::blockHash($this->players[strtolower($player->getName())][self::DISGUISE_LAST_X], $this->players[strtolower($player->getName())][self::DISGUISE_LAST_Y], $this->players[strtolower($player->getName())][self::DISGUISE_LAST_Z])])){
+				unset($this->blocks[$this->getLastLevel($player->getName())][$hash]);
+			}
+			if($this->players[strtolower($player->getName())][self::DISGUISE_TYPE] == self::DISGUISE_TYPE_ENTITY and isset($this->entities[$this->players[strtolower($player->getName())][self::DISGUISE_ENTITY_ID]])){
+				unset($this->entities[$this->players[strtolower($player->getName())][self::DISGUISE_ENTITY_ID]]);
 			}
 			unset($this->players[strtolower($player->getName())]);
 			$this->showPlayer($player);
@@ -221,7 +292,7 @@ class Main extends PluginBase{
 		$this->players[strtolower($player->getName())][self::DISGUISE_TYPE] = $type;
 	}
 
-	public function getPlayerDisguiseType($name) : int{
+	public function getPlayerDisguiseType(string $name){
 		if(isset($this->players[strtolower($name)])){
 			return $this->players[strtolower($name)][self::DISGUISE_TYPE];
 		}

@@ -18,8 +18,10 @@
 
 namespace PCM_DisguisePlayer\entity;
 
+use PCM_DisguisePlayer\Main;
 use pocketmine\entity\Cow;
 use pocketmine\entity\Creature;
+use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\level\format\FullChunk;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\network\protocol\AddEntityPacket;
@@ -50,13 +52,31 @@ class GenericEntity extends Creature{
 		parent::__construct($chunk, $nbt);
 	}
 
-	public function onUpdate($tick){
-		if(($tick % 5) == 0){
-			if($this->owner->distance($this) > 1){
-				$this->setPosition($this->owner);
-			}
+	public function initEntity(){
+		$this->setMaxHealth($this->owner->getMaxHealth());
+		$this->setHealth($this->owner->getHealth());
+	}
+
+	public function attack($damage, EntityDamageEvent $source){
+		$this->owner->attack($damage, $source);
+		parent::attack($damage, $source);
+	}
+
+	public function kill(){
+		$this->owner->kill();
+		Main::getInstance()->clearPlayerDisguiseStatus($this->owner);
+		parent::kill();
+		$this->close();
+	}
+
+	public function checkPosition(){
+		if($this->owner->getLevel() != $this->getLevel() or $this->owner->distance($this) > 1){
+			$this->setPositionAndRotation($this->owner, $this->owner->yaw, $this->owner->pitch);
 		}
-		return true;
+	}
+
+	public function onUpdate($tick){
+		return false;
 	}
 
 	public function saveNBT(){

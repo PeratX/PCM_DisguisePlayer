@@ -22,6 +22,7 @@ use PCM_DisguisePlayer\Main;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
+use pocketmine\event\entity\EntityTeleportEvent;
 use pocketmine\event\level\LevelLoadEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerInteractEvent;
@@ -31,6 +32,7 @@ use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\event\player\PlayerToggleSneakEvent;
 use pocketmine\item\Item;
 use pocketmine\level\Level;
+use pocketmine\Player;
 
 class EventListener implements Listener{
 	/** @var  Main */
@@ -50,11 +52,33 @@ class EventListener implements Listener{
 
 	public function onPlayerMove(PlayerMoveEvent $ev){
 		$this->plugin->updateBlock($ev->getPlayer());
-		//$this->plugin->updateEntity($ev->getPlayer());
+		$this->plugin->updateEntity($ev->getPlayer());
+	}
+
+	public function onPlayerTeleport(EntityTeleportEvent $ev){
+		$player = $ev->getEntity();
+		if($player instanceof Player){
+			$this->plugin->updateBlock($player);
+			$this->plugin->updateEntity($player);
+		}
 	}
 
 	public function onBlockBreak(BlockBreakEvent $ev){
-		//if()
+		$block = $ev->getBlock();
+		if(isset($this->plugin->blocks[$block->getLevel()->getFolderName()][Level::blockHash($block->x, $block->y, $block->z)])){
+			$ev->setCancelled();
+		}
+	}
+	
+	public function onEntityDamage(EntityDamageEvent $ev){
+		if($ev instanceof EntityDamageByEntityEvent and $ev->getDamager() instanceof Player and !$ev->getEntity() instanceof Player){
+			/** @var Player $player */
+			$player = $ev->getDamager();
+			$target = $ev->getEntity();
+			if($this->plugin->getPlayerDisguiseType($player) == Main::DISGUISE_TYPE_NONE and !isset($this->plugin->entities[$ev->getEntity()->getId()]) and in_array($player->getInventory()->getItemInHand()->getId(), $this->plugin->getHeldItems())){
+				$this->plugin->disguisePlayerToEntity($player, $target::NETWORK_ID);
+			}
+		}
 	}
 
 	public function onPlayerQuit(PlayerQuitEvent $ev){
@@ -73,9 +97,11 @@ class EventListener implements Listener{
 	
 	public function useItemOn(PlayerInteractEvent $ev){
 		if($ev->getAction() == PlayerInteractEvent::RIGHT_CLICK_BLOCK){
-			if(in_array($hash = Level::blockHash($ev->getBlock()->x, $ev->getBlock()->y, $ev->getBlock()->z), $blocks = $this->plugin->getBlocks($ev->getBlock()->getLevel()))){
-				$player = $blocks[$hash];
-				if($player == $ev->getPlayer()){
+			$block = $ev->getBlock();
+			if(isset($this->plugin->blocks[$ev->getBlock()->getLevel()->getFolderName()][Level::blockHash($block->x, $block->y, $block->z)])){
+				/** @var Player $player */
+				$player = $this->plugin->blocks[$ev->getBlock()->getLevel()->getFolderName()][Level::blockHash($block->x, $block->y, $block->z)];
+				if($player->getRawUniqueId() == $ev->getPlayer()->getRawUniqueId()){
 					return;
 				}
 				$item = $ev->getItem();
