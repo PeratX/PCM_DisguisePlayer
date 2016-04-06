@@ -63,7 +63,7 @@ class GenericEntity extends Creature{
 	}
 
 	public function kill(){
-		$this->owner->kill();
+		//$this->owner->kill();
 		Main::getInstance()->clearPlayerDisguiseStatus($this->owner);
 		parent::kill();
 		$this->close();

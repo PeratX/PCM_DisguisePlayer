@@ -265,10 +265,14 @@ class Main extends PluginBase{
 					false
 				);
 			}
-			if(isset($this->blocks[$this->getLastLevel($player->getName())][$hash = Level::blockHash($this->players[strtolower($player->getName())][self::DISGUISE_LAST_X], $this->players[strtolower($player->getName())][self::DISGUISE_LAST_Y], $this->players[strtolower($player->getName())][self::DISGUISE_LAST_Z])])){
-				unset($this->blocks[$this->getLastLevel($player->getName())][$hash]);
+			if(isset($this->blocks[$this->getLastLevel($player->getName())->getFolderName()][$hash = Level::blockHash($this->players[strtolower($player->getName())][self::DISGUISE_LAST_X], $this->players[strtolower($player->getName())][self::DISGUISE_LAST_Y], $this->players[strtolower($player->getName())][self::DISGUISE_LAST_Z])])){
+				unset($this->blocks[$this->getLastLevel($player->getName())->getFolderName()][$hash]);
 			}
 			if($this->players[strtolower($player->getName())][self::DISGUISE_TYPE] == self::DISGUISE_TYPE_ENTITY and isset($this->entities[$this->players[strtolower($player->getName())][self::DISGUISE_ENTITY_ID]])){
+				$ent = $this->getLastLevel($player->getName())->getEntity($this->players[strtolower($player->getName())][self::DISGUISE_ENTITY_ID]);
+				if($ent instanceof GenericEntity){
+					$ent->close();
+				}
 				unset($this->entities[$this->players[strtolower($player->getName())][self::DISGUISE_ENTITY_ID]]);
 			}
 			unset($this->players[strtolower($player->getName())]);
