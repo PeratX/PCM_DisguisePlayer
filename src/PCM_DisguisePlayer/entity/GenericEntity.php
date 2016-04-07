@@ -49,6 +49,7 @@ class GenericEntity extends Creature{
 		}
 		$this->owner = $owner;
 		$this->network_id = $network_id;
+		$this->setDataProperty(self::DATA_NO_AI, self::DATA_TYPE_BYTE, 1);
 		parent::__construct($chunk, $nbt);
 	}
 
@@ -69,10 +70,12 @@ class GenericEntity extends Creature{
 		$this->close();
 	}
 
-	public function checkPosition(){
-		if($this->owner->getLevel() != $this->getLevel() or $this->owner->distance($this) > 1){
-			$this->setPositionAndRotation($this->owner, $this->owner->yaw, $this->owner->pitch);
+	public function onUpdate($tick){
+		if(($tick % 2) == 0){
+			$this->setPositionAndRotation($this->owner->add(0, -$this->owner->getEyeHeight(), 0), $this->owner->yaw, $this->owner->pitch);
+			$this->updateMovement();
 		}
+		return true;
 	}
 
 	public function saveNBT(){

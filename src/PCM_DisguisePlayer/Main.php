@@ -200,7 +200,7 @@ class Main extends PluginBase{
 		){
 			/** @var GenericEntity $ent */
 			$ent = $player->getLevel()->getEntity($this->players[$name = strtolower($player->getName())][self::DISGUISE_ENTITY_ID]);
-			$ent->checkPosition();
+			//Nothing to do!
 		}
 	}
 
@@ -269,11 +269,11 @@ class Main extends PluginBase{
 				unset($this->blocks[$this->getLastLevel($player->getName())->getFolderName()][$hash]);
 			}
 			if($this->players[strtolower($player->getName())][self::DISGUISE_TYPE] == self::DISGUISE_TYPE_ENTITY and isset($this->entities[$this->players[strtolower($player->getName())][self::DISGUISE_ENTITY_ID]])){
-				$ent = $this->getLastLevel($player->getName())->getEntity($this->players[strtolower($player->getName())][self::DISGUISE_ENTITY_ID]);
+				$ent = $this->getLastLevel($player->getName())->getEntity($id = $this->players[strtolower($player->getName())][self::DISGUISE_ENTITY_ID]);
 				if($ent instanceof GenericEntity){
 					$ent->close();
 				}
-				unset($this->entities[$this->players[strtolower($player->getName())][self::DISGUISE_ENTITY_ID]]);
+				unset($this->entities[$id]);
 			}
 			unset($this->players[strtolower($player->getName())]);
 			$this->showPlayer($player);
