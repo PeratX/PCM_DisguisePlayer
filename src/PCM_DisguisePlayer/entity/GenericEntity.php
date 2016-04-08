@@ -18,7 +18,6 @@
 
 namespace PCM_DisguisePlayer\entity;
 
-use PCM_DisguisePlayer\Main;
 use pocketmine\entity\Cow;
 use pocketmine\entity\Creature;
 use pocketmine\event\entity\EntityDamageEvent;
@@ -26,6 +25,8 @@ use pocketmine\level\format\FullChunk;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\network\protocol\AddEntityPacket;
 use pocketmine\Player;
+
+use PCM_DisguisePlayer\Main;
 
 class GenericEntity extends Creature{
 	public $width = 0.6;
