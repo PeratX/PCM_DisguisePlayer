@@ -231,7 +231,7 @@ class Main extends PluginBase{
 		}
 	}
 
-	public function disguisePlayerToEntity(Player $player, int $network_id){
+	public function disguisePlayerToEntity(Player $player, $network_id){
 		if($this->getPlayerDisguiseType($player->getName()) == self::DISGUISE_TYPE_NONE and in_array($network_id, $this->getAvailableEntities())){
 			$this->setPlayerDisguiseType($player, self::DISGUISE_TYPE_ENTITY);
 			$name = $player->getName();
@@ -243,7 +243,7 @@ class Main extends PluginBase{
 		}
 	}
 
-	public function disguisePlayerToBlock(Player $player, int $id, int $meta){
+	public function disguisePlayerToBlock(Player $player, $id, $meta){
 		if($this->getPlayerDisguiseType($player) == self::DISGUISE_TYPE_NONE and in_array($id, $this->getAvailableBlocks())){
 			$this->setPlayerDisguiseType($player, self::DISGUISE_TYPE_BLOCK);
 			$name = $player->getName();
@@ -292,7 +292,7 @@ class Main extends PluginBase{
 		}
 	}
 
-	public function setPlayerDisguiseType(Player $player, int $type){
+	public function setPlayerDisguiseType(Player $player, $type){
 		$this->players[strtolower($player->getName())][self::DISGUISE_TYPE] = $type;
 		if($type != self::DISGUISE_TYPE_NONE){
 			$player->setDataFlag(Entity::DATA_FLAGS, Entity::DATA_FLAG_INVISIBLE, true);
@@ -303,7 +303,7 @@ class Main extends PluginBase{
 		}
 	}
 
-	public function getPlayerDisguiseType(string $name){
+	public function getPlayerDisguiseType($name){
 		if(isset($this->players[strtolower($name)])){
 			return $this->players[strtolower($name)][self::DISGUISE_TYPE];
 		}
