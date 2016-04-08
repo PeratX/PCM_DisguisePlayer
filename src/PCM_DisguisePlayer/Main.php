@@ -35,10 +35,10 @@ use pocketmine\item\Item;
 use pocketmine\level\Level;
 use pocketmine\level\Position;
 use pocketmine\math\Vector3;
-use pocketmine\nbt\tag\CompoundTag;
-use pocketmine\nbt\tag\DoubleTag;
-use pocketmine\nbt\tag\FloatTag;
-use pocketmine\nbt\tag\ListTag;
+use pocketmine\nbt\tag\Compound;
+use pocketmine\nbt\tag\Double;
+use pocketmine\nbt\tag\Float;
+use pocketmine\nbt\tag\Enum;
 use pocketmine\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\Config;
@@ -209,20 +209,20 @@ class Main extends PluginBase{
 			and isset($this->players[$name = strtolower($player->getName())][self::DISGUISE_ENTITY_NETWORK_ID])
 			and !isset($this->players[$name][self::DISGUISE_ENTITY_ID])
 		){
-			$ent = new GenericEntity($player->chunk, $nbt = new CompoundTag("", [
-				"Pos" => new ListTag("Pos", [
-					new DoubleTag("", $player->x),
-					new DoubleTag("", $player->y),
-					new DoubleTag("", $player->z)
+			$ent = new GenericEntity($player->chunk, $nbt = new Compound("", [
+				"Pos" => new Enum("Pos", [
+					new Double("", $player->x),
+					new Double("", $player->y),
+					new Double("", $player->z)
 				]),
-				"Motion" => new ListTag("Motion", [
-					new DoubleTag("", 0),
-					new DoubleTag("", 0),
-					new DoubleTag("", 0)
+				"Motion" => new Enum("Motion", [
+					new Double("", 0),
+					new Double("", 0),
+					new Double("", 0)
 				]),
-				"Rotation" => new ListTag("Rotation", [
-					new FloatTag("", $player->yaw),
-					new FloatTag("", $player->pitch)
+				"Rotation" => new Enum("Rotation", [
+					new Float("", $player->yaw),
+					new Float("", $player->pitch)
 				])
 			]), $player, $this->players[$name][self::DISGUISE_ENTITY_NETWORK_ID]);
 			$ent->spawnToAll();

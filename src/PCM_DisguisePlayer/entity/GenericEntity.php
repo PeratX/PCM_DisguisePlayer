@@ -22,7 +22,7 @@ use pocketmine\entity\Cow;
 use pocketmine\entity\Creature;
 use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\level\format\FullChunk;
-use pocketmine\nbt\tag\CompoundTag;
+use pocketmine\nbt\tag\Compound;
 use pocketmine\network\protocol\AddEntityPacket;
 use pocketmine\Player;
 
@@ -43,7 +43,7 @@ class GenericEntity extends Creature{
 		return "Generic Entity";
 	}
 
-	public function __construct(FullChunk $chunk, CompoundTag $nbt, Player $owner = null, $network_id = 0){
+	public function __construct(FullChunk $chunk, Compound $nbt, Player $owner = null, $network_id = 0){
 		if($owner == null or $network_id == 0){
 			$this->close();
 			return;
