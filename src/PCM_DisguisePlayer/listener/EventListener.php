@@ -18,13 +18,13 @@
 
 namespace PCM_DisguisePlayer\listener;
 
-use PCM_DisguisePlayer\Main;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\entity\EntityTeleportEvent;
 use pocketmine\event\level\LevelLoadEvent;
 use pocketmine\event\Listener;
+use pocketmine\event\player\PlayerDeathEvent;
 use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerMoveEvent;
@@ -34,8 +34,10 @@ use pocketmine\item\Item;
 use pocketmine\level\Level;
 use pocketmine\Player;
 
+use PCM_DisguisePlayer\Main;
+
 class EventListener implements Listener{
-	/** @var  Main */
+	/** @var Main */
 	private $plugin;
 
 	public function __construct(Main $plugin){
@@ -79,6 +81,10 @@ class EventListener implements Listener{
 				$this->plugin->disguisePlayerToEntity($player, $target::NETWORK_ID);
 			}
 		}
+	}
+
+	public function onPlayerDeath(PlayerDeathEvent $ev){
+		$this->plugin->clearPlayerDisguiseStatus($ev->getPlayer());
 	}
 
 	public function onPlayerQuit(PlayerQuitEvent $ev){
