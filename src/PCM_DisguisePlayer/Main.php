@@ -294,6 +294,13 @@ class Main extends PluginBase{
 
 	public function setPlayerDisguiseType(Player $player, int $type){
 		$this->players[strtolower($player->getName())][self::DISGUISE_TYPE] = $type;
+		if($type != self::DISGUISE_TYPE_NONE){
+			$player->setDataFlag(Entity::DATA_FLAGS, Entity::DATA_FLAG_INVISIBLE, true);
+			$player->setDataProperty(Entity::DATA_SHOW_NAMETAG, Entity::DATA_TYPE_BYTE, 0);
+		}else{
+			$player->setDataFlag(Entity::DATA_FLAGS, Entity::DATA_FLAG_INVISIBLE, true);
+			$player->setDataProperty(Entity::DATA_SHOW_NAMETAG, Entity::DATA_TYPE_BYTE, 0);
+		}
 	}
 
 	public function getPlayerDisguiseType(string $name){
