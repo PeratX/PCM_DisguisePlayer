@@ -84,7 +84,7 @@ class EventListener implements Listener{
 	}
 
 	public function onPlayerDeath(PlayerDeathEvent $ev){
-		$this->plugin->clearPlayerDisguiseStatus($ev->getPlayer());
+		$this->plugin->clearPlayerDisguiseStatus($ev->getEntity());
 	}
 
 	public function onPlayerQuit(PlayerQuitEvent $ev){
