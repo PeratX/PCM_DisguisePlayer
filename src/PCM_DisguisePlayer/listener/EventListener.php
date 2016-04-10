@@ -30,6 +30,7 @@ use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\event\player\PlayerToggleSneakEvent;
+use pocketmine\inventory\PlayerInventory;
 use pocketmine\item\Item;
 use pocketmine\level\Level;
 use pocketmine\Player;
@@ -107,7 +108,7 @@ class EventListener implements Listener{
 			if(isset($this->plugin->blocks[$ev->getBlock()->getLevel()->getFolderName()][Level::blockHash($block->x, $block->y, $block->z)])){
 				/** @var Player $player */
 				$player = $this->plugin->blocks[$ev->getBlock()->getLevel()->getFolderName()][Level::blockHash($block->x, $block->y, $block->z)];
-				if($player->getRawUniqueId() == $ev->getPlayer()->getRawUniqueId()){
+				if((!$player->getInventory() instanceof PlayerInventory) or ($player->getRawUniqueId() == $ev->getPlayer()->getRawUniqueId())){
 					return;
 				}
 				$item = $ev->getItem();
