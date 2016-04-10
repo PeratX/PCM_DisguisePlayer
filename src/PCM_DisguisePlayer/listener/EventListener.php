@@ -24,12 +24,11 @@ use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\entity\EntityTeleportEvent;
 use pocketmine\event\level\LevelLoadEvent;
 use pocketmine\event\Listener;
-use pocketmine\event\player\PlayerDeathEvent;
 use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\event\player\PlayerQuitEvent;
-use pocketmine\event\player\PlayerToggleSneakEvent;
+use pocketmine\inventory\PlayerInventory;
 use pocketmine\item\Item;
 use pocketmine\level\Level;
 use pocketmine\Player;
@@ -54,14 +53,14 @@ class EventListener implements Listener{
 
 	public function onPlayerMove(PlayerMoveEvent $ev){
 		$this->plugin->updateBlock($ev->getPlayer());
-		$this->plugin->updateEntity($ev->getPlayer());
+		//$this->plugin->updateEntity($ev->getPlayer());
 	}
 
 	public function onPlayerTeleport(EntityTeleportEvent $ev){
 		$player = $ev->getEntity();
 		if($player instanceof Player){
 			$this->plugin->updateBlock($player);
-			$this->plugin->updateEntity($player);
+			//$this->plugin->updateEntity($player);
 		}
 	}
 
@@ -83,18 +82,8 @@ class EventListener implements Listener{
 		}
 	}
 
-	public function onPlayerDeath(PlayerDeathEvent $ev){
-		$this->plugin->clearPlayerDisguiseStatus($ev->getPlayer());
-	}
-
 	public function onPlayerQuit(PlayerQuitEvent $ev){
 		$this->plugin->clearPlayerDisguiseStatus($ev->getPlayer());
-	}
-
-	public function onPlayerSneak(PlayerToggleSneakEvent $ev){
-		if($ev->isSneaking()){
-			$this->plugin->clearPlayerDisguiseStatus($ev->getPlayer());
-		}
 	}
 	
 	public function onLevelLoad(LevelLoadEvent $ev){
@@ -107,7 +96,7 @@ class EventListener implements Listener{
 			if(isset($this->plugin->blocks[$ev->getBlock()->getLevel()->getFolderName()][Level::blockHash($block->x, $block->y, $block->z)])){
 				/** @var Player $player */
 				$player = $this->plugin->blocks[$ev->getBlock()->getLevel()->getFolderName()][Level::blockHash($block->x, $block->y, $block->z)];
-				if($player->getRawUniqueId() == $ev->getPlayer()->getRawUniqueId()){
+				if((!$player->getInventory() instanceof PlayerInventory) or ($player->getRawUniqueId() == $ev->getPlayer()->getRawUniqueId())){
 					return;
 				}
 				$item = $ev->getItem();

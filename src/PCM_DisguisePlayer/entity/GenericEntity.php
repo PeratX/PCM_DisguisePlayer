@@ -64,17 +64,30 @@ class GenericEntity extends Creature{
 		parent::attack($damage, $source);
 	}
 
-	public function kill(){
+	/*public function kill(){
 		//$this->owner->kill();
 		Main::getInstance()->clearPlayerDisguiseStatus($this->owner);
 		parent::kill();
 		$this->close();
+	}*/
+
+	public function setHealth($amount){
+		if($amount > 0){
+			parent::setHealth($amount);
+		}
 	}
 
 	public function onUpdate($tick){
 		if(($tick % 2) == 0){
-			$this->setPositionAndRotation($this->owner->add(0, -$this->owner->getEyeHeight(), 0), $this->owner->yaw, $this->owner->pitch);
+			if($this->level != $this->owner->getLevel()){
+				$this->teleport($this->owner);
+			}else{
+				$this->setPositionAndRotation($this->owner->add(0, -$this->owner->getEyeHeight(), 0), $this->owner->yaw, $this->owner->pitch);
+			}
 			$this->updateMovement();
+
+			$this->setMaxHealth($this->owner->getMaxHealth());
+			$this->setHealth($this->owner->getHealth());
 		}
 		return true;
 	}

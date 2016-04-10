@@ -33,7 +33,6 @@ use pocketmine\entity\Pig;
 use pocketmine\entity\Sheep;
 use pocketmine\item\Item;
 use pocketmine\level\Level;
-use pocketmine\level\Position;
 use pocketmine\math\Vector3;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\DoubleTag;
@@ -121,15 +120,15 @@ class Main extends PluginBase{
 		return self::$obj;
 	}
 
-	public function getAvailableBlocks(){
+	public function getAvailableBlocks() : array{
 		return $this->cfgdata["availableBlocks"];
 	}
 
-	public function getHeldItems(){
+	public function getHeldItems() : array{
 		return $this->cfgdata["heldItems"];
 	}
 
-	public function getAvailableEntities(){
+	public function getAvailableEntities() : array{
 		return $this->cfgdata["availableEntities"];
 	}
 
@@ -146,7 +145,7 @@ class Main extends PluginBase{
 		$this->getLogger()->notice($this->getDescription()->getName() . " has been disabled");
 	}
 
-	public function getPlayers(){
+	public function getPlayers() : array {
 		return $this->players;
 	}
 
@@ -157,12 +156,12 @@ class Main extends PluginBase{
 		return null;
 	}
 
-	public function setLastPosition(Player $player, Position $pos){
+	public function setLastPosition(Player $player, Vector3 $pos, Level $level){
 		$name = $player->getName();
-		$this->players[strtolower($name)][self::DISGUISE_LAST_X] = $pos->x;
-		$this->players[strtolower($name)][self::DISGUISE_LAST_Y] = $pos->y;
-		$this->players[strtolower($name)][self::DISGUISE_LAST_Z] = $pos->z;
-		$this->players[strtolower($name)][self::DISGUISE_LAST_LEVEL] = $pos->level;
+		$this->players[$name][self::DISGUISE_LAST_X] = $pos->x;
+		$this->players[$name][self::DISGUISE_LAST_Y] = $pos->y;
+		$this->players[$name][self::DISGUISE_LAST_Z] = $pos->z;
+		$this->players[$name][self::DISGUISE_LAST_LEVEL] = $level;
 	}
 
 	/**
@@ -190,7 +189,7 @@ class Main extends PluginBase{
 				$player->getLevel()->setBlock($pos, Block::get($this->players[strtolower($name)][self::DISGUISE_BLOCK_ID], $this->players[strtolower($name)][self::DISGUISE_BLOCK_META]), true, false);
 				$this->blocks[$player->getLevel()->getFolderName()][Level::blockHash($pos->x, $pos->y, $pos->z)] = $player;
 			}
-			$this->setLastPosition($player, Position::fromObject($pos, $player->getLevel()));
+			$this->setLastPosition($player, $pos, $player->getLevel());
 		}
 	}
 
@@ -236,7 +235,7 @@ class Main extends PluginBase{
 			$this->setPlayerDisguiseType($player, self::DISGUISE_TYPE_ENTITY);
 			$name = $player->getName();
 			$this->players[strtolower($name)][self::DISGUISE_ENTITY_NETWORK_ID] = $network_id;
-			$this->setLastPosition($player, $player);
+			$this->setLastPosition($player, $player, $player->getLevel());
 			$this->hidePlayer($player);
 			$this->createEntity($player);
 			$this->updateEntity($player);
@@ -249,7 +248,7 @@ class Main extends PluginBase{
 			$name = $player->getName();
 			$this->players[strtolower($name)][self::DISGUISE_BLOCK_ID] = $id;
 			$this->players[strtolower($name)][self::DISGUISE_BLOCK_META] = $meta;
-			$this->setLastPosition($player, $player);
+			$this->setLastPosition($player, $player, $player->getLevel());
 			$this->hidePlayer($player);
 			$this->updateBlock($player);
 		}
@@ -275,8 +274,9 @@ class Main extends PluginBase{
 				}
 				unset($this->entities[$id]);
 			}
-			unset($this->players[strtolower($player->getName())]);
+			$this->setPlayerDisguiseType($player, self::DISGUISE_TYPE_NONE);
 			$this->showPlayer($player);
+			unset($this->players[strtolower($player->getName())]);
 		}
 	}
 
@@ -303,7 +303,7 @@ class Main extends PluginBase{
 		}
 	}
 
-	public function getPlayerDisguiseType(string $name){
+	public function getPlayerDisguiseType(string $name) : int{
 		if(isset($this->players[strtolower($name)])){
 			return $this->players[strtolower($name)][self::DISGUISE_TYPE];
 		}
