@@ -178,9 +178,9 @@ class Main extends PluginBase{
 	public function updateBlock(Player $player){
 		if($this->getPlayerDisguiseType($name = $player->getName()) == self::DISGUISE_TYPE_BLOCK){
 			$lastBlock = $this->getLastLevel($name)->getBlock($this->tempVector->setComponents($this->players[strtolower($name)][self::DISGUISE_LAST_X], $this->players[strtolower($name)][self::DISGUISE_LAST_Y], $this->players[strtolower($name)][self::DISGUISE_LAST_Z]));
-			if($lastBlock->getId() == $this->players[strtolower($name)][self::DISGUISE_BLOCK_ID] and $lastBlock->getDamage() == $this->players[strtolower($name)][self::DISGUISE_BLOCK_META]){
+		//	if($lastBlock->getId() == $this->players[strtolower($name)][self::DISGUISE_BLOCK_ID] and $lastBlock->getDamage() == $this->players[strtolower($name)][self::DISGUISE_BLOCK_META]){
 				$this->getLastLevel($name)->setBlock($lastBlock, new Air(), true, false);
-			}
+		//	}
 			if(isset($this->blocks[$player->getLevel()->getFolderName()][$hash = Level::blockHash($lastBlock->x, $lastBlock->y, $lastBlock->z)])){
 				unset($this->blocks[$player->getLevel()->getFolderName()][$hash]);
 			}
