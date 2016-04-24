@@ -70,10 +70,6 @@ class EventListener implements Listener{
 		}
 	}
 
-	public function onPlayerDeath(PlayerDeathEvent $ev){
-		$this->plugin->clearPlayerDisguiseStatus($ev->getPlayer());
-	}
-
 	public function onBlockBreak(BlockBreakEvent $ev){
 		$block = $ev->getBlock();
 		if(isset($this->plugin->blocks[$block->getLevel()->getFolderName()][Level::blockHash($block->x, $block->y, $block->z)])){
