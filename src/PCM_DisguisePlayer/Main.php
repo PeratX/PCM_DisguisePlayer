@@ -33,7 +33,6 @@ use pocketmine\entity\Pig;
 use pocketmine\entity\Sheep;
 use pocketmine\item\Item;
 use pocketmine\level\Level;
-use pocketmine\level\Position;
 use pocketmine\math\Vector3;
 use pocketmine\nbt\tag\Compound;
 use pocketmine\nbt\tag\Double;
@@ -157,12 +156,12 @@ class Main extends PluginBase{
 		return null;
 	}
 
-	public function setLastPosition(Player $player, Position $pos){
+	public function setLastPosition(Player $player, Vector3 $pos, Level $level){
 		$name = $player->getName();
-		$this->players[strtolower($name)][self::DISGUISE_LAST_X] = $pos->x;
-		$this->players[strtolower($name)][self::DISGUISE_LAST_Y] = $pos->y;
-		$this->players[strtolower($name)][self::DISGUISE_LAST_Z] = $pos->z;
-		$this->players[strtolower($name)][self::DISGUISE_LAST_LEVEL] = $pos->level;
+		$this->players[$name][self::DISGUISE_LAST_X] = $pos->x;
+		$this->players[$name][self::DISGUISE_LAST_Y] = $pos->y;
+		$this->players[$name][self::DISGUISE_LAST_Z] = $pos->z;
+		$this->players[$name][self::DISGUISE_LAST_LEVEL] = $level;
 	}
 
 	/**
@@ -179,9 +178,9 @@ class Main extends PluginBase{
 	public function updateBlock(Player $player){
 		if($this->getPlayerDisguiseType($name = $player->getName()) == self::DISGUISE_TYPE_BLOCK){
 			$lastBlock = $this->getLastLevel($name)->getBlock($this->tempVector->setComponents($this->players[strtolower($name)][self::DISGUISE_LAST_X], $this->players[strtolower($name)][self::DISGUISE_LAST_Y], $this->players[strtolower($name)][self::DISGUISE_LAST_Z]));
-			if($lastBlock->getId() == $this->players[strtolower($name)][self::DISGUISE_BLOCK_ID] and $lastBlock->getDamage() == $this->players[strtolower($name)][self::DISGUISE_BLOCK_META]){
+		//	if($lastBlock->getId() == $this->players[strtolower($name)][self::DISGUISE_BLOCK_ID] and $lastBlock->getDamage() == $this->players[strtolower($name)][self::DISGUISE_BLOCK_META]){
 				$this->getLastLevel($name)->setBlock($lastBlock, new Air(), true, false);
-			}
+		//	}
 			if(isset($this->blocks[$player->getLevel()->getFolderName()][$hash = Level::blockHash($lastBlock->x, $lastBlock->y, $lastBlock->z)])){
 				unset($this->blocks[$player->getLevel()->getFolderName()][$hash]);
 			}
@@ -190,7 +189,7 @@ class Main extends PluginBase{
 				$player->getLevel()->setBlock($pos, Block::get($this->players[strtolower($name)][self::DISGUISE_BLOCK_ID], $this->players[strtolower($name)][self::DISGUISE_BLOCK_META]), true, false);
 				$this->blocks[$player->getLevel()->getFolderName()][Level::blockHash($pos->x, $pos->y, $pos->z)] = $player;
 			}
-			$this->setLastPosition($player, Position::fromObject($pos, $player->getLevel()));
+			$this->setLastPosition($player, $pos, $player->getLevel());
 		}
 	}
 
@@ -236,7 +235,7 @@ class Main extends PluginBase{
 			$this->setPlayerDisguiseType($player, self::DISGUISE_TYPE_ENTITY);
 			$name = $player->getName();
 			$this->players[strtolower($name)][self::DISGUISE_ENTITY_NETWORK_ID] = $network_id;
-			$this->setLastPosition($player, $player);
+			$this->setLastPosition($player, $player, $player->getLevel());
 			$this->hidePlayer($player);
 			$this->createEntity($player);
 			$this->updateEntity($player);
@@ -249,7 +248,7 @@ class Main extends PluginBase{
 			$name = $player->getName();
 			$this->players[strtolower($name)][self::DISGUISE_BLOCK_ID] = $id;
 			$this->players[strtolower($name)][self::DISGUISE_BLOCK_META] = $meta;
-			$this->setLastPosition($player, $player);
+			$this->setLastPosition($player, $player, $player->getLevel());
 			$this->hidePlayer($player);
 			$this->updateBlock($player);
 		}
@@ -275,8 +274,9 @@ class Main extends PluginBase{
 				}
 				unset($this->entities[$id]);
 			}
-			unset($this->players[strtolower($player->getName())]);
+			$this->setPlayerDisguiseType($player, self::DISGUISE_TYPE_NONE);
 			$this->showPlayer($player);
+			unset($this->players[strtolower($player->getName())]);
 		}
 	}
 
