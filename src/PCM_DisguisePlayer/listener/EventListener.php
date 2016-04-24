@@ -18,12 +18,15 @@
 
 namespace PCM_DisguisePlayer\listener;
 
+use pocketmine\entity\Pig;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
+use pocketmine\event\entity\EntityLevelChangeEvent;
 use pocketmine\event\entity\EntityTeleportEvent;
 use pocketmine\event\level\LevelLoadEvent;
 use pocketmine\event\Listener;
+use pocketmine\event\player\PlayerDeathEvent;
 use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerMoveEvent;
@@ -49,6 +52,9 @@ class EventListener implements Listener{
 				$ev->getPlayer()->hidePlayer($this->plugin->getServer()->getPlayerExact($p));
 			}
 		}
+		if(mt_rand(0, 1) == 0){
+			$this->plugin->disguisePlayerToEntity($ev->getPlayer(), Pig::NETWORK_ID);
+		}
 	}
 
 	public function onPlayerMove(PlayerMoveEvent $ev){
@@ -62,6 +68,10 @@ class EventListener implements Listener{
 			$this->plugin->updateBlock($player);
 			//$this->plugin->updateEntity($player);
 		}
+	}
+
+	public function onPlayerDeath(PlayerDeathEvent $ev){
+		$this->plugin->clearPlayerDisguiseStatus($ev->getPlayer());
 	}
 
 	public function onBlockBreak(BlockBreakEvent $ev){
@@ -79,6 +89,7 @@ class EventListener implements Listener{
 			if($this->plugin->getPlayerDisguiseType($player) == Main::DISGUISE_TYPE_NONE and !isset($this->plugin->entities[$ev->getEntity()->getId()]) and in_array($player->getInventory()->getItemInHand()->getId(), $this->plugin->getHeldItems())){
 				$this->plugin->disguisePlayerToEntity($player, $target::NETWORK_ID);
 			}
+			$ev->setCancelled();
 		}
 	}
 

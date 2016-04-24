@@ -81,10 +81,11 @@ class GenericEntity extends Creature{
 		if(($tick % 2) == 0){
 			if($this->level != $this->owner->getLevel()){
 				$this->teleport($this->owner);
+				$this->spawnToAll();
 			}else{
 				$this->setPositionAndRotation($this->owner->add(0, -$this->owner->getEyeHeight(), 0), $this->owner->yaw, $this->owner->pitch);
+				$this->updateMovement();
 			}
-			$this->updateMovement();
 
 			$this->setMaxHealth($this->owner->getMaxHealth());
 			$this->setHealth($this->owner->getHealth());
